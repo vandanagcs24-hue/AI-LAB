@@ -1,0 +1,78 @@
+from itertools import product
+
+# Knowledge Base:
+# 1. Q -> P
+# 2. P -> NOT Q
+# 3. Q OR R
+
+def knowledge_base(P, Q, R):
+    s1 = (not Q) or P          # Q -> P
+    s2 = (not P) or (not Q)   # P -> NOT Q
+    s3 = Q or R                # Q OR R
+
+    KB = s1 and s2 and s3
+    return s1, s2, s3, KB
+
+
+def main():
+    print("TRUTH TABLE")
+    print("-" * 75)
+    print("P Q R | Q->P P->NOTQ Q OR R | KB | R | R->P | Q->R")
+    print("-" * 75)
+
+    models = []
+
+    # False first, then True
+    values = [False, True]
+
+    for P, Q, R in product(values, repeat=3):
+        s1, s2, s3, KB = knowledge_base(P, Q, R)
+
+        # Queries
+        query1 = R
+        query2 = (not R) or P       # R -> P
+        query3 = (not Q) or R        # Q -> R
+
+        # Display truth table
+        print(
+            f"{str(P):5} {str(Q):5} {str(R):5} | "
+            f"{str(s1):5} {str(s2):7} {str(s3):6} | "
+            f"{str(KB):5} | {str(query1):5} | "
+            f"{str(query2):5} | {str(query3):5}"
+        )
+
+        # Store models where KB is true
+        if KB:
+            models.append((P, Q, R))
+
+    print("\nMODELS WHERE KB IS TRUE:")
+    for model in models:
+        print(f"P={model[0]}, Q={model[1]}, R={model[2]}")
+
+    # Check entailment
+    entails_R = all(
+        knowledge_base(P, Q, R)[3] <= R
+        for P, Q, R in product(values, repeat=3)
+    )
+
+    entails_R_implies_P = all(
+        not knowledge_base(P, Q, R)[3]
+        or ((not R) or P)
+        for P, Q, R in product(values, repeat=3)
+    )
+
+    entails_Q_implies_R = all(
+        not knowledge_base(P, Q, R)[3]
+        or ((not Q) or R)
+        for P, Q, R in product(values, repeat=3)
+    )
+
+    print("\nENTAILMENT RESULTS:")
+    print("KB entails R:", entails_R)
+    print("KB entails R -> P:", entails_R_implies_P)
+    print("KB entails Q -> R:", entails_Q_implies_R)
+
+
+if __name__ == "__main__":
+    main()
+
