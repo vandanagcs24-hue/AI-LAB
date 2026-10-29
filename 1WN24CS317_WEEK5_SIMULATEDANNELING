@@ -1,0 +1,85 @@
+
+import random
+import math
+
+N = 8
+
+
+def calculate_conflicts(board):
+    conflicts = 0
+
+    for i in range(N):
+        for j in range(i + 1, N):
+            if abs(board[i] - board[j]) == abs(i - j):
+                conflicts += 1
+
+    return conflicts
+
+
+def display_board(board):
+    print("\nFinal Queen Board:")
+    print("  1 2 3 4 5 6 7 8")
+
+    for row in range(N):
+        print(row + 1, end=" ")
+        for col in range(N):
+            if board[col] == row:
+                print("Q", end=" ")
+            else:
+                print(".", end=" ")
+        print()
+
+
+def simulated_annealing():
+    board = [random.randint(0, N - 1) for _ in range(N)]
+
+    temperature = 100.0
+    cooling_rate = 0.99
+    max_iterations = 2
+
+    print("Initial Board:", [x + 1 for x in board])
+    print("Initial Conflicts:", calculate_conflicts(board))
+    print("\nIteration | Temperature | Conflicts | Move")
+    print("-" * 48)
+
+    for iteration in range(1, max_iterations + 1):
+        current_conflicts = calculate_conflicts(board)
+
+        neighbor = board.copy()
+        column = random.randint(0, N - 1)
+        old_row = neighbor[column]
+        new_row = random.randint(0, N - 1)
+
+        while new_row == old_row:
+            new_row = random.randint(0, N - 1)
+
+        neighbor[column] = new_row
+        new_conflicts = calculate_conflicts(neighbor)
+
+        delta = new_conflicts - current_conflicts
+
+        if delta <= 0:
+            board = neighbor
+            move = "Accepted"
+        elif random.random() < math.exp(-delta / temperature):
+            board = neighbor
+            move = "Accepted"
+        else:
+            move = "Rejected"
+
+        print(
+            f"{iteration:^9} | {temperature:^11.2f} | "
+            f"{calculate_conflicts(board):^9} | {move}"
+        )
+
+        temperature *= cooling_rate
+
+    print("\nFinal Queen Positions (row, column):")
+    for col, row in enumerate(board):
+        print(f"({row + 1}, {col + 1})")
+
+    print("Final Conflicts:", calculate_conflicts(board))
+    display_board(board)
+
+
+simulated_annealing()
