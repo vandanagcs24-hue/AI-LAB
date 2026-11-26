@@ -1,0 +1,112 @@
+def unify(x, y, substitution=None):
+    if substitution is None:
+        substitution = {}
+
+    if x in substitution:
+        x = substitution[x]
+
+    if y in substitution:
+        y = substitution[y]
+
+    if x == y:
+        return substitution
+
+    if x[0].islower() and x.isalpha():
+        substitution[x] = y
+        return substitution
+
+    if y[0].islower() and y.isalpha():
+        substitution[y] = x
+        return substitution
+
+    return None
+
+
+def resolve(c1, c2):
+    resolvents = []
+
+    for literal1 in c1:
+        for literal2 in c2:
+
+            # Check for complementary literals
+            if literal1[0] == "~" + literal2[0]:
+                continue
+
+            if literal1.startswith("~"):
+                if literal1[1:] == literal2:
+                    new_clause = (c1 - {literal1}) | (c2 - {literal2})
+                    resolvents.append(new_clause)
+
+            elif literal2.startswith("~"):
+                if literal2[1:] == literal1:
+                    new_clause = (c1 - {literal1}) | (c2 - {literal2})
+                    resolvents.append(new_clause)
+
+    return resolvents
+
+
+def resolution(kb, query):
+
+    # Negate the query and add it to KB
+    clauses = kb + [{ "~" + query }]
+
+    print("Initial Clauses:")
+    for c in clauses:
+        print(c)
+
+    while True:
+
+        new_clauses = []
+
+        for i in range(len(clauses)):
+            for j in range(i + 1, len(clauses)):
+
+                resolvents = resolve(clauses[i], clauses[j])
+
+                for r in resolvents:
+
+                    if len(r) == 0:
+                        print("\nEmpty clause obtained: {}")
+                        print("Query is PROVED!")
+                        return True
+
+                    if r not in clauses and r not in new_clauses:
+                        new_clauses.append(r)
+
+        if not new_clauses:
+            print("\nNo new clauses generated.")
+            print("Query cannot be proved.")
+            return False
+
+        clauses.extend(new_clauses)
+
+        print("\nNew Clauses:")
+        for c in new_clauses:
+            print(c)
+
+
+# Main Program
+if __name__ == "__main__":
+
+    # Knowledge Base:
+    # All humans are mortal:
+    # ~Human(x) OR Mortal(x)
+    #
+    # Socrates is human:
+    # Human(Socrates)
+
+    KB = [
+        {"~Human(Socrates)", "Mortal(Socrates)"},
+        {"Human(Socrates)"}
+    ]
+
+    # Query
+    query = "Mortal(Socrates)"
+
+    print("Knowledge Base:")
+    print("1. All humans are mortal")
+    print("2. Socrates is human")
+
+    print("\nQuery:", query)
+
+    resolution(KB, query)
